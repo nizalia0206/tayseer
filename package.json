@@ -1,0 +1,16 @@
+{
+ "name": "edupass",
+ "version": "0.9.0",
+ "private": true,
+ "scripts": {
+  "install:all": "npm install && npm --prefix client install",
+  "build": "npm --prefix client run build",
+  "start": "node server.js",
+  "dev": "node server.js",
+  "test": "npm --prefix client test && node --test test/api.test.js test/safeer.test.js",
+  "test:api": "node --test test/api.test.js test/safeer.test.js"
+ },
+ "dependencies": {
+  "qrcode": "1.5.4"
+ }
+}

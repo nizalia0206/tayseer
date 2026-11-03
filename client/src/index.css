@@ -1,0 +1,70 @@
+@import "tailwindcss";
+/* Design tokens follow Tayseer (warm UAE gold palette, Inter / Roboto / Noto Kufi Arabic, 16px card radius).
+   The accessibility menu switches them through data attributes on <html> (see a11y.tsx). */
+@theme inline {
+  --color-bg: var(--bg); --color-fg: var(--ink); --color-card: var(--card); --color-muted: var(--ink-muted); --color-soft: var(--soft);
+  --color-line: var(--border); --color-primary: var(--primary); --color-primary-fg: var(--primary-fg);
+  --color-ok: var(--ok); --color-bad: var(--bad); --color-warn: var(--warn);
+  --radius-card: 16px;
+  --font-head: var(--ff-h); --font-body: var(--ff-b);
+}
+:root{--bg:#faf7f0;--fg:#1d1a14;--card:#fff;--border:#e4dcc8;--soft:#f3ead3;--muted:#5f5747;--ok:#1f6b3a;--bad:#a12626;--warn:#8a5a00;
+--primary:#92722A;--primary-fg:#fff;--fs:1;--ls:0em;--ff-h:Inter,"Noto Kufi Arabic",system-ui,sans-serif;--ff-b:Roboto,system-ui,sans-serif;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* the accent colour tints all text (ink), headings and labels; high contrast keeps pure black/white */
+:root{--ink:color-mix(in srgb,var(--primary) 16%,var(--fg));--ink-muted:color-mix(in srgb,var(--primary) 30%,var(--muted));--ink-head:color-mix(in srgb,var(--primary) 42%,var(--fg));--card-accent:#C9A24A}
+[data-hc=on]{--ink:var(--fg);--ink-muted:var(--muted);--ink-head:var(--fg)}
+[data-accent=blue]{--card-accent:#4DB8F0}[data-accent=red]{--card-accent:#FF8A8A}[data-accent=green]{--card-accent:#6FD195}
+[data-theme=dark]{--bg:#14110b;--fg:#f4efe2;--card:#1e1a12;--border:#3a3222;--soft:#2a2418;--muted:#c4b9a2;--ok:#6fd195;--bad:#ff9a9a;--warn:#f0c46a;--primary:#C9A24A;--primary-fg:#14110b}
+/* accent colours (Tayseer: gold, blue, red, green) */
+[data-accent=blue]{--primary:#0B6FA4}[data-accent=red]{--primary:#B42323}[data-accent=green]{--primary:#2B7A3D}
+[data-theme=dark][data-accent=gold]{--primary:#C9A24A}[data-theme=dark][data-accent=blue]{--primary:#4DB8F0}[data-theme=dark][data-accent=red]{--primary:#FF8A8A}[data-theme=dark][data-accent=green]{--primary:#6FD195}
+/* high contrast */
+[data-hc=on]{--fg:#000;--muted:#000;--border:#000;--bg:#fff;--card:#fff;--soft:#fff}
+[data-hc=on][data-theme=dark]{--fg:#fff;--muted:#fff;--border:#fff;--bg:#000;--card:#000;--soft:#000}
+[dir=rtl]{--ff-h:"Noto Kufi Arabic",Inter,sans-serif;--ff-b:"Noto Kufi Arabic",Roboto,sans-serif}
+html{font-size:calc(16px*var(--fs));scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ff-b);letter-spacing:var(--ls);word-spacing:calc(var(--ls)*2);line-height:1.55}
+h1,h2,h3,h4{font-family:var(--ff-h);line-height:1.2;letter-spacing:-.015em}
+@layer base{h1,h2,h3,h4{color:var(--ink-head)}}
+@layer components{
+.display{font-family:var(--ff-h);font-weight:800;letter-spacing:-.035em;line-height:1.02}
+.eyebrow{font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--primary)}
+.card-accent{color:var(--card-accent)}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+/* learner card: guilloche security pattern, purely decorative */
+.guilloche{background-image:repeating-radial-gradient(circle at 85% 120%,transparent 0 9px,rgba(201,162,74,.13) 9px 10px),repeating-radial-gradient(circle at -10% -30%,transparent 0 13px,rgba(201,162,74,.08) 13px 14px)}
+}
+[dir=rtl] .eyebrow,[dir=rtl] .display{letter-spacing:0}
+::selection{background:color-mix(in srgb,var(--primary) 25%,transparent)}
+a{color:var(--primary)}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.enter{animation:in .25s ease-out}
+[data-rm=on] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* highlight links, buttons and headings */
+[data-hl=on] :is(a,button,h1,h2,h3,summary,[role=switch]){outline:2px solid #f5b700;outline-offset:2px;background-image:linear-gradient(#f5b70033,#f5b70033)}
+/* simpler instructions: hide secondary hints */
+[data-simple=on] .hint{display:none}
+[data-cursor=large] *,[data-cursor=xl] *{cursor:var(--cur)!important}
+[data-cursor=large] :is(button,a,select,label,input,summary,[role=switch]),[data-cursor=xl] :is(button,a,select,label,input,summary,[role=switch]){cursor:var(--cur-p)!important}
+summary{cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+details>summary .chev{transition:transform .2s}
+details[open]>summary .chev{transform:rotate(90deg)}
+[dir=rtl] details>summary .chev{transform:scaleX(-1)}
+[dir=rtl] details[open]>summary .chev{transform:rotate(90deg)}
+#print-root{display:none}
+@media print{header,nav,footer,.no-print{display:none!important}body{background:#fff}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  /* printEl(): only the cloned element is printed (learner card, a document or a sharing report) */
+  body.printing>*:not(#print-root){display:none!important}
+  body.printing #print-root{display:block;padding:12mm}
+  body.printing #print-root .no-print{display:none!important}
+  body.printing #print-root .print-card{max-width:150mm;box-shadow:none}
+  body.printing #print-root .doc-paper{box-shadow:none;border:0}}
+/* Safeer (AI assistant): 3D canvas, typing dots, drawer entrance */
+.m3d{touch-action:none;flex:none;cursor:grab}.m3d canvas{width:100%;height:100%;display:block}
+.dots i{display:inline-block;width:6px;height:6px;margin:0 2px;border-radius:50%;background:currentColor;animation:bl 1s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}@keyframes bl{50%{opacity:.2;transform:translateY(-3px)}}
+@keyframes safeer-in{from{opacity:0;transform:translateX(24px)}}[dir=rtl] .safeer-drawer{--dx:-24px}.safeer-drawer{animation:safeer-in .28s cubic-bezier(.2,.8,.2,1)}
