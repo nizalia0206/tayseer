@@ -43,7 +43,12 @@ export default function App() {
       grants: gr.ok ? gr.grants : [], corrections: co.ok ? co.corrections : [] })
   }, [])
   const go = useCallback((v: View, opts?: any) => { setIntent(opts ?? null); setView(v); setSeen(s => ({ ...s, [v]: true })); window.scrollTo?.(0, 0) }, [])
-  useEffect(() => { api('/me').then(r => { setUser(norm(r.user ?? null)); setSrvVersion(r.version ?? 'old'); setReady(true) }) }, [])
+  // every time the site is opened or reloaded it starts a fresh demo at the sign-in page.
+  // A share link or card verification link only signs out, so the share being opened is kept.
+  useEffect(() => { (async () => {
+    await api(tokenOf(location.hash) || /#\/verify\//.test(location.hash) ? '/logout' : '/fresh', {})
+    const r = await api('/me'); setUser(norm(r.user ?? null)); setSrvVersion(r.version ?? 'old'); setReady(true)
+  })() }, [])
   useEffect(() => { if (user) reload() }, [user, reload])
   useEffect(() => { if (user) setView(user.role === 'reviewer' ? 'review' : navFor(user.role, data)[0]) }, [user?.id]) // eslint-disable-line
   useEffect(() => { if (user && pending && user.role === 'reviewer') setView('review') }, [user, pending])

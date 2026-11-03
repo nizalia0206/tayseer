@@ -133,6 +133,8 @@ async function api(req,res,url){
   if(a.role==='stranger')return send(res,403,{error:'Your account has no approved organisation membership'});
   const sid=SESS.set(a.id,Date.now()+36e5);
   return send(res,200,{user:pub(a)},'application/json',{'Set-Cookie':`sid=${sid}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600`})}
+ // opening the site starts a fresh demo: sign out and put every learner back at the start (the client skips this for share and verify links)
+ if(p==='/api/fresh'&&m==='POST'){SESS.delete(cookie(req).sid);DB=mkDB();audit(null,'fresh demo on site open');return send(res,200,{ok:1},'application/json',{'Set-Cookie':'sid=; Max-Age=0; Path=/'})}
  if(p==='/api/logout'&&m==='POST'){SESS.delete(cookie(req).sid);return send(res,200,{ok:1},'application/json',{'Set-Cookie':'sid=; Max-Age=0; Path=/'})}
  if(p==='/api/me')return send(res,200,{user:pub(u),version:VERSION});
  mm=p.match(/^\/api\/verify\/([\w-]+)$/); // public card check: status only, no personal data (demo, not cryptographic)
@@ -346,7 +348,7 @@ async function api(req,res,url){
  send(res,404,{error:'Not found'})}
 const origin=req=>`http://${req.headers.host}`;
 const DIST=path.join(__dirname,'client','dist');
-const TYPES={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.json':'application/json','.woff2':'font/woff2','.mp4':'video/mp4','.webm':'video/webm'};
+const TYPES={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.png':'image/png','.json':'application/json','.woff2':'font/woff2','.mp4':'video/mp4','.webm':'video/webm'};
 function serveStatic(res,pathname){
  if(!fs.existsSync(DIST))return send(res,503,'Client not built. Run: npm run build','text/plain');
  let f=path.normalize(path.join(DIST,pathname==='/'?'index.html':pathname));
@@ -361,7 +363,7 @@ const handler=async(req,res)=>{try{const url=new URL(req.url,'http://x');
   // on Vercel without a shared store: the demo state travels with the browser in signed cookies (carry.js)
   if(CARRIED){if(req.method!=='GET'&&req.method!=='HEAD')req._raw=await readRaw(req);
    const ck=cookie(req),got=CARRY.read(ck,SECRET,freshHistory);DB=got||mkDB();const mine=DB,before=CARRY.compact(DB),oldN=+ck[CARRY.NAME+'n']||0,secure=String(req.headers['x-forwarded-proto']||'').includes('https');
-   const wh=res.writeHead.bind(res);res.writeHead=(code,h={})=>{let add=null;try{const now=CARRY.compact(url.pathname==='/api/reset'?DB:mine);if(!got||now!==before)add=CARRY.write(now,SECRET,oldN,secure)}catch(e){console.error('carry',e.message)}
+   const wh=res.writeHead.bind(res);res.writeHead=(code,h={})=>{let add=null;try{const now=CARRY.compact(url.pathname==='/api/reset'||url.pathname==='/api/fresh'?DB:mine);if(!got||now!==before)add=CARRY.write(now,SECRET,oldN,secure)}catch(e){console.error('carry',e.message)}
     if(add){const ex=h['Set-Cookie'];h={...h,'Set-Cookie':[...(ex?[].concat(ex):[]),...add]}}return wh(code,h)}}
   return await api(req,res,url)}
  serveStatic(res,decodeURIComponent(url.pathname))}catch(e){console.error(e);send(res,500,{error:'Server error'})}};
