@@ -7,8 +7,8 @@
   "build": "npm --prefix client run build",
   "start": "node server.js",
   "dev": "node server.js",
-  "test": "npm --prefix client test && node --test test/api.test.js test/safeer.test.js",
-  "test:api": "node --test test/api.test.js test/safeer.test.js"
+  "test": "npm --prefix client test && node --test test/api.test.js test/safeer.test.js test/store.test.js",
+  "test:api": "node --test test/api.test.js test/safeer.test.js test/store.test.js"
  },
  "dependencies": {
   "qrcode": "1.5.4"

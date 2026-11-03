@@ -1,6 +1,6 @@
 'use strict';
 // Tayseer prototype backend (learner card, Tayseer design). Node built-ins + qrcode. In-memory data (resets on restart).
-const http=require('http'),fs=require('fs'),path=require('path'),crypto=require('crypto'),QRCode=require('qrcode'),DEMO=require('./demo-data'),SAFEER=require('./safeer');
+const http=require('http'),fs=require('fs'),path=require('path'),crypto=require('crypto'),QRCode=require('qrcode'),DEMO=require('./demo-data'),SAFEER=require('./safeer'),STORE=require('./store');
 const PORT=process.env.PORT||3000;
 // --- accounts (prototype PIN only; real service would use national/organisation sign-in) ---
 const hash=(p,s)=>crypto.scryptSync(p,s,32);
@@ -349,7 +349,11 @@ function serveStatic(res,pathname){
  if(!fs.existsSync(f)||fs.statSync(f).isDirectory()){if(path.extname(pathname))return send(res,404,'Not found','text/plain');f=path.join(DIST,'index.html')}
  res.writeHead(200,{'Content-Type':TYPES[path.extname(f)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Cache-Control':path.extname(f)==='.html'?'no-store':'no-cache'});res.end(fs.readFileSync(f))}
 const handler=async(req,res)=>{try{const url=new URL(req.url,'http://x');
- if(url.pathname.startsWith('/api/'))return await api(req,res,url);
+ if(url.pathname.startsWith('/api/')){
+  // shared storage (store.js): load the latest demo data first; save it before the response goes out if it changed
+  if(STORE.on){let raw=null;try{raw=await STORE.load();if(raw)DB=STORE.parse(raw)}catch(e){console.error('store load',e.message)}
+   const end=res.end.bind(res);res.end=(...a)=>{let s=null;try{s=STORE.dump(DB)}catch{}(s&&s!==raw?STORE.save(s):Promise.resolve()).catch(e=>console.error('store save',e.message)).finally(()=>end(...a));return res}}
+  return await api(req,res,url)}
  serveStatic(res,decodeURIComponent(url.pathname))}catch(e){console.error(e);send(res,500,{error:'Server error'})}};
 // `npm start` runs a normal server; on Vercel, api/index.js imports the handler instead
 if(require.main===module)http.createServer(handler).listen(PORT,()=>console.log('Tayseer on http://localhost:'+PORT+'  (demo PIN 1234)'));

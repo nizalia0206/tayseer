@@ -21,7 +21,11 @@ The repo is ready for Vercel: `vercel.json`, `api/index.js` (runs the same serve
 3. Optional environment variables: `SESSION_SECRET` (any long random text), and `ANTHROPIC_API_KEY` to give Safeer a real AI model.
 4. Click **Deploy**. Every push to the main branch redeploys automatically.
 
-Demo data lives in memory, as it does locally. On Vercel it resets when the function restarts (after idle time or a new deploy), and two server instances can briefly hold different data. That is fine for a demo, but not for real use.
+**Keep the demo data between requests (recommended on Vercel).** Vercel runs the server as short-lived instances, so in-memory data resets and Sara's onboarding starts over. Add a free Redis store:
+Vercel project → **Storage** → **Create Database** → **Upstash for Redis** (free plan) → connect it to this project, then **Redeploy**.
+Vercel adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`), and `store.js` then saves the demo state there after every change.
+Without them, data stays in memory as with `npm start`. To start the demo over, sign in as the platform operator and use Reset.
+
 If you change the front end, rebuild `client/dist` locally (`npm --prefix client install && npm run build`) and commit it.
 
 ## Safeer (سفير) AI assistant and agent
