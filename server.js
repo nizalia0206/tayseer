@@ -1,6 +1,6 @@
 'use strict';
 // Tayseer prototype backend (learner card, Tayseer design). Node built-ins + qrcode. In-memory data (resets on restart).
-const http=require('http'),fs=require('fs'),path=require('path'),crypto=require('crypto'),QRCode=require('qrcode'),DEMO=require('./demo-data'),SAFEER=require('./safeer'),STORE=require('./store');
+const http=require('http'),fs=require('fs'),path=require('path'),crypto=require('crypto'),QRCode=require('qrcode'),DEMO=require('./demo-data'),SAFEER=require('./safeer'),STORE=require('./store'),CARRY=require('./carry');
 const PORT=process.env.PORT||3000;
 // --- accounts (prototype PIN only; real service would use national/organisation sign-in) ---
 const hash=(p,s)=>crypto.scryptSync(p,s,32);
@@ -33,10 +33,15 @@ const mkDB=()=>({records:[{id:'ENR-1',issuer:UNI,src:'S1042',title:'Enrollment, 
  rules:[{cat:'Learner records',purpose:'Lifelong learner profile',trigger:'Learner closes account',days:3650,hold:false},{cat:'Application attachments',purpose:'Application review',trigger:'Decision made',days:30,hold:false},{cat:'Support documents',purpose:'Support arrangement',trigger:'Arrangement ends',days:180,hold:false}],
  attach:[{id:'ATT-1',name:'Sample application attachment',at:Date.now(),status:'kept'}]});
 let DB=mkDB();
+const freshHistory=()=>({schools:DEMO.schools(),docs:DEMO.docs(),transfers:[DEMO.schoolTransfer(),DEMO.uniTransfer()]});
+// Vercel: without a shared store (store.js), keep each browser's demo state in signed cookies (carry.js)
+const CARRIED=!STORE.on&&!!(process.env.VERCEL||process.env.TAYSEER_CARRY);
 const now=()=>Date.now()+DB.off*864e5;
 const audit=(u,a)=>{DB.audit.push(`${new Date().toISOString()} ${u?u.id:'anon'} ${a}`);DB.audit.length>200&&DB.audit.shift()};
 const send=(res,code,obj,type='application/json',extra={})=>{res.writeHead(code,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...extra});res.end(type==='application/json'?JSON.stringify(obj):obj)};
-const body=req=>new Promise(r=>{let d='';req.on('data',c=>{d+=c;d.length>1e5&&req.destroy()});req.on('end',()=>{try{const j=JSON.parse(d||'{}');r(j&&typeof j==='object'&&!Array.isArray(j)?j:{})}catch{r({})}})});
+const parseBody=d=>{try{const j=JSON.parse(d||'{}');return j&&typeof j==='object'&&!Array.isArray(j)?j:{}}catch{return{}}};
+const readRaw=req=>new Promise(r=>{let d='';req.on('data',c=>{d+=c;d.length>1e5&&req.destroy()});req.on('end',()=>r(d));req.on('error',()=>r(''))});
+const body=req=>req._raw!==undefined?Promise.resolve(parseBody(req._raw)):readRaw(req).then(parseBody);
 const cookie=req=>Object.fromEntries((req.headers.cookie||'').split(';').filter(Boolean).map(c=>c.trim().split('=')));
 const userOf=req=>{const s=SESS.get(cookie(req).sid);if(!s||s.exp<Date.now())return null;return USERS.find(u=>u.id===s.userId)};
 const pub=u=>u&&{id:u.id,name:u.name,role:u.role,org:u.org};
@@ -353,6 +358,11 @@ const handler=async(req,res)=>{try{const url=new URL(req.url,'http://x');
   // shared storage (store.js): load the latest demo data first; save it before the response goes out if it changed
   if(STORE.on){let raw=null;try{raw=await STORE.load();if(raw)DB=STORE.parse(raw)}catch(e){console.error('store load',e.message)}
    const end=res.end.bind(res);res.end=(...a)=>{let s=null;try{s=STORE.dump(DB)}catch{}(s&&s!==raw?STORE.save(s):Promise.resolve()).catch(e=>console.error('store save',e.message)).finally(()=>end(...a));return res}}
+  // on Vercel without a shared store: the demo state travels with the browser in signed cookies (carry.js)
+  if(CARRIED){if(req.method!=='GET'&&req.method!=='HEAD')req._raw=await readRaw(req);
+   const ck=cookie(req),got=CARRY.read(ck,SECRET,freshHistory);DB=got||mkDB();const mine=DB,before=CARRY.compact(DB),oldN=+ck[CARRY.NAME+'n']||0,secure=String(req.headers['x-forwarded-proto']||'').includes('https');
+   const wh=res.writeHead.bind(res);res.writeHead=(code,h={})=>{let add=null;try{const now=CARRY.compact(url.pathname==='/api/reset'?DB:mine);if(!got||now!==before)add=CARRY.write(now,SECRET,oldN,secure)}catch(e){console.error('carry',e.message)}
+    if(add){const ex=h['Set-Cookie'];h={...h,'Set-Cookie':[...(ex?[].concat(ex):[]),...add]}}return wh(code,h)}}
   return await api(req,res,url)}
  serveStatic(res,decodeURIComponent(url.pathname))}catch(e){console.error(e);send(res,500,{error:'Server error'})}};
 // `npm start` runs a normal server; on Vercel, api/index.js imports the handler instead

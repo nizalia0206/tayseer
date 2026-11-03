@@ -21,10 +21,9 @@ The repo is ready for Vercel: `vercel.json`, `api/index.js` (runs the same serve
 3. Optional environment variables: `SESSION_SECRET` (any long random text), and `ANTHROPIC_API_KEY` to give Safeer a real AI model.
 4. Click **Deploy**. Every push to the main branch redeploys automatically.
 
-**Keep the demo data between requests (recommended on Vercel).** Vercel runs the server as short-lived instances, so in-memory data resets and Sara's onboarding starts over. Add a free Redis store:
-Vercel project → **Storage** → **Create Database** → **Upstash for Redis** (free plan) → connect it to this project, then **Redeploy**.
-Vercel adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`), and `store.js` then saves the demo state there after every change.
-Without them, data stays in memory as with `npm start`. To start the demo over, sign in as the platform operator and use Reset.
+**Demo data on Vercel works with no extra setup.** Vercel runs the server as short-lived instances, so plain in-memory data would differ from click to click. On Vercel the server therefore keeps each browser's demo state in signed, HttpOnly cookies (`carry.js`). Every instance reads the same state, so the demo behaves as it does with `npm start`. The signature stops the browser from altering the state, and all permission checks still run on the server. Each browser has its own demo; to start over, sign in as the platform operator and use Reset.
+Optional: to share one demo across all browsers, connect **Storage → Upstash for Redis** in Vercel and redeploy. When `KV_REST_API_URL` / `KV_REST_API_TOKEN` are present, `store.js` is used instead.
+Set `SESSION_SECRET` so that sign-ins and demo state survive redeploys.
 
 If you change the front end, rebuild `client/dist` locally (`npm --prefix client install && npm run build`) and commit it.
 
