@@ -1,4 +1,4 @@
-# EduPass (إدو باس) prototype, Tayseer design
+# Tayseer (تيسير) prototype
 One learner card that grows with Sara: her university enrollment, achievements and qualifications, shared only with the people and organizations she chooses.
 Frontend design and experience follow Tayseer (warm UAE gold palette, Inter / Roboto / Noto Kufi Arabic, card layout, accessibility drawer). Functionality, roles and server-side permission checks are EduPass.
 React + TypeScript + Tailwind v4 client, Node backend.
@@ -68,7 +68,7 @@ Safeer is the falcon assistant from the Tayseer passport prototype, renamed and 
 - New API: `/api/history`, `/api/transfers/:id/items/:item/upload`, `/api/learners`, `/api/learners/:ref`, `/api/card/qr.svg`, `/api/verify/:ref`; `/api/timeline` adds `events`; `/api/share-options` adds `items` and per-recipient `requirements`; grants carry `ref` and an access `log`.
 - Tests: 25 backend (6 new).
 
-## v0.7 unified EduPass (Tayseer design + EduPass functionality)
+## v0.7 unified educational platform 
 - Learner navigation reduced to six items: My Card, My Learning, Opportunities, Applications, Sharing, Support & Access. Before Sara's card exists she only sees the setup flow.
   Role dashboards: supporter (Sara's learning / Deadlines / Application draft / My permissions), Class view (teacher), Advising, Support requests (coordinator), Review shared records (reviewer), Issuer dashboard (university registrar), Organizer / Training provider, Governance, Operations. The Demo guide is in the account menu.
 - My Card: learner card (name, learner reference, status, institution, enrollment or qualification, achievement count), "Your next step" derived from real server state, Sara's 8-stage journey, and "What's inside my card?" (Identity, Education, Education records, Achievements, Not official records). Every record shows title, issuing organization, date of enrollment/achievement, date added, verification, current status and previous versions. Accessibility preferences and support documents are never on the card.
